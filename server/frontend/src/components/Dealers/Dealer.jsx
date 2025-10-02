@@ -23,33 +23,6 @@ const Dealer = () => {
   let dealer_url = root_url+`djangoapp/dealer/${id}`;
   let reviews_url = root_url+`djangoapp/reviews/dealer/${id}`;
   let post_review = root_url+`postreview/${id}`;
-  
-  const get_dealer = async ()=>{
-    const res = await fetch(dealer_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    
-    if(retobj.status === 200) {
-      let dealerobjs = Array.from(retobj.dealer)
-      setDealer(dealerobjs[0])
-    }
-  }
-
-  const get_reviews = async ()=>{
-    const res = await fetch(reviews_url, {
-      method: "GET"
-    });
-    const retobj = await res.json();
-    
-    if(retobj.status === 200) {
-      if(retobj.reviews.length > 0){
-        setReviews(retobj.reviews)
-      } else {
-        setUnreviewed(true);
-      }
-    }
-  }
 
   const senti_icon = (sentiment)=>{
     let icon = sentiment === "positive"?positive_icon:sentiment==="negative"?negative_icon:neutral_icon;
@@ -57,14 +30,42 @@ const Dealer = () => {
   }
 
   useEffect(() => {
-    get_dealer();
-    get_reviews();
-    if(sessionStorage.getItem("username")) {
-      setPostReview(<a href={post_review}><img src={review_icon} style={{width:'10%',marginLeft:'10px',marginTop:'10px'}} alt='Post Review'/></a>)
-
-      
+    const fetchDealer = async () => {
+      const res = await fetch(dealer_url);
+      const retobj = await res.json();
+      if (retobj.status === 200) {
+        setDealer(retobj.dealer);
+      }
+    };
+  
+    const fetchReviews = async () => {
+      const res = await fetch(reviews_url);
+      const retobj = await res.json();
+      if (retobj.status === 200) {
+        if (retobj.reviews.length > 0) {
+          setReviews(retobj.reviews);
+        } else {
+          setUnreviewed(true);
+        }
+      }
+    };
+  
+    fetchDealer();
+    fetchReviews();
+  
+    if (sessionStorage.getItem("username")) {
+      setPostReview(
+        <a href={post_review}>
+          <img
+            src={review_icon}
+            style={{ width: "10%", marginLeft: "10px", marginTop: "10px" }}
+            alt="Post Review"
+          />
+        </a>
+      );
     }
-  },[]);  
+  }, [dealer_url, reviews_url, post_review]); // Only real dependencies now
+    
 
 
 return(
@@ -76,10 +77,10 @@ return(
       </div>
       <div class="reviews_panel">
       {reviews.length === 0 && unreviewed === false ? (
-        <text>Loading Reviews....</text>
+        <div>Loading Reviews....</div>
       ):  unreviewed === true? <div>No reviews yet! </div> :
       reviews.map(review => (
-        <div className='review_panel'>
+        <div className='review_panel' key={review.id}>
           <img src={senti_icon(review.sentiment)} className="emotion_icon" alt='Sentiment'/>
           <div className='review'>{review.review}</div>
           <div className="reviewer">{review.name} {review.car_make} {review.car_model} {review.car_year}</div>
