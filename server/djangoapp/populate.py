@@ -1,4 +1,4 @@
- from .models import CarMake, CarModel
+from .models import CarMake, CarModel
 
 def initiate():
     print("Populate not implemented. Add data manually")
